@@ -3,6 +3,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import 'package:theme_selector/provider/shared_preferences_provider.dart';
+import 'package:theme_selector/theme_selector/theme_mode_ext.dart';
 import 'package:theme_selector/theme_selector/my_theme_data.dart';
 import 'package:theme_selector/theme_selector/theme_selector_provider.dart';
 
@@ -70,7 +71,15 @@ class HomePage extends ConsumerWidget {
                       ref.watch(messageProvider.notifier).update((state) => describeEnum(themeMode));
                       themeSelector.changeAndSave(newTheme!);
                     },
-                    title: Text(describeEnum(themeMode)),
+
+                    title: Row(
+                      children: [
+                        Icon(themeMode.iconData),
+                        const SizedBox(width: 5,),
+                        Text(describeEnum(themeMode)),
+                      ],
+                    ),
+                    subtitle: Text(themeMode.subtitle),
                   );
                 },
               ),
