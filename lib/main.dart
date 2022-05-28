@@ -5,6 +5,9 @@ import 'package:shared_preferences/shared_preferences.dart';
 import 'package:theme_selector/provider/shared_preferences_provider.dart';
 import 'package:theme_selector/theme_selector/theme_selector_provider.dart';
 
+// 再起動をチェックするためのメッセージProvider
+final messageProvider = StateProvider<String>((ref) => '起動');
+
 Future<void> main() async {
   WidgetsFlutterBinding.ensureInitialized();
 
@@ -43,21 +46,35 @@ class HomePage extends ConsumerWidget {
     final themeSelector = ref.watch(themeSelectorProvider.notifier);
     // 現在選択されているThemeModeを監視
     final currentThemeMode = ref.watch(themeSelectorProvider);
+    final currentMessage = ref.watch(messageProvider);
     return Scaffold(
+      appBar: AppBar(
+        title: const Text('ThemeMode select'),
+      ),
       body: Padding(
         padding: const EdgeInsets.all(10.0),
-        child: ListView.builder(
-          padding: const EdgeInsets.symmetric(vertical: 16),
-          itemCount: ThemeMode.values.length,
-          itemBuilder: (_, index) {
-            final themeMode = ThemeMode.values[index];
-            return RadioListTile<ThemeMode>(
-              value: themeMode, // ラジオボタンのvalue(ThemeModeのenum)
-              groupValue: currentThemeMode, // 現在選択されているボタン
-              onChanged: (newTheme) => themeSelector.changeAndSave(newTheme!),
-              title: Text(describeEnum(themeMode)),
-            );
-          },
+        child: Column(
+          children: [
+            Text(currentMessage),
+            Expanded(
+              child: ListView.builder(
+                padding: const EdgeInsets.symmetric(vertical: 16),
+                itemCount: ThemeMode.values.length,
+                itemBuilder: (_, index) {
+                  final themeMode = ThemeMode.values[index];
+                  return RadioListTile<ThemeMode>(
+                    value: themeMode, // ラジオボタンのvalue(ThemeModeのenum)
+                    groupValue: currentThemeMode, // 現在選択されているボタン
+                    onChanged: (newTheme) {
+                      ref.watch(messageProvider.notifier).update((state) => describeEnum(themeMode));
+                      themeSelector.changeAndSave(newTheme!);
+                    },
+                    title: Text(describeEnum(themeMode)),
+                  );
+                },
+              ),
+            ),
+          ],
         ),
       ),
     );
