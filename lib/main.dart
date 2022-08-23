@@ -3,7 +3,12 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import 'package:theme_selector/provider/shared_preferences_provider.dart';
+import 'package:theme_selector/theme_selector/theme_mode_ext.dart';
+import 'package:theme_selector/theme_selector/my_theme_data.dart';
 import 'package:theme_selector/theme_selector/theme_selector_provider.dart';
+
+// 再起動をチェックするためのメッセージProvider
+final messageProvider = StateProvider<String>((ref) => '起動');
 
 Future<void> main() async {
   WidgetsFlutterBinding.ensureInitialized();
@@ -25,8 +30,8 @@ class MyApp extends ConsumerWidget {
   Widget build(BuildContext context, WidgetRef ref) {
     return MaterialApp(
       title: 'My App',
-      theme: ThemeData.light(),
-      darkTheme: ThemeData.dark(),
+      theme: myLightThemeData,
+      darkTheme: myDarkThemeData,
       themeMode: ref.watch(themeSelectorProvider),
       // 現在のテーマモード設定を監視
       home: const HomePage(),
@@ -43,21 +48,43 @@ class HomePage extends ConsumerWidget {
     final themeSelector = ref.watch(themeSelectorProvider.notifier);
     // 現在選択されているThemeModeを監視
     final currentThemeMode = ref.watch(themeSelectorProvider);
+    final currentMessage = ref.watch(messageProvider);
     return Scaffold(
+      appBar: AppBar(
+        title: const Text('ThemeMode select'),
+      ),
       body: Padding(
         padding: const EdgeInsets.all(10.0),
-        child: ListView.builder(
-          padding: const EdgeInsets.symmetric(vertical: 16),
-          itemCount: ThemeMode.values.length,
-          itemBuilder: (_, index) {
-            final themeMode = ThemeMode.values[index];
-            return RadioListTile<ThemeMode>(
-              value: themeMode, // ラジオボタンのvalue(ThemeModeのenum)
-              groupValue: currentThemeMode, // 現在選択されているボタン
-              onChanged: (newTheme) => themeSelector.changeAndSave(newTheme!),
-              title: Text(describeEnum(themeMode)),
-            );
-          },
+        child: Column(
+          children: [
+            Text(currentMessage),
+            Expanded(
+              child: ListView.builder(
+                padding: const EdgeInsets.symmetric(vertical: 16),
+                itemCount: ThemeMode.values.length,
+                itemBuilder: (_, index) {
+                  final themeMode = ThemeMode.values[index];
+                  return RadioListTile<ThemeMode>(
+                    value: themeMode, // ラジオボタンのvalue(ThemeModeのenum)
+                    groupValue: currentThemeMode, // 現在選択されているボタン
+                    onChanged: (newTheme) {
+                      ref.watch(messageProvider.notifier).update((state) => describeEnum(themeMode));
+                      themeSelector.changeAndSave(newTheme!);
+                    },
+
+                    title: Row(
+                      children: [
+                        Icon(themeMode.iconData),
+                        const SizedBox(width: 5,),
+                        Text(describeEnum(themeMode)),
+                      ],
+                    ),
+                    subtitle: Text(themeMode.subtitle),
+                  );
+                },
+              ),
+            ),
+          ],
         ),
       ),
     );
